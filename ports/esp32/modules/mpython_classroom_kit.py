@@ -227,6 +227,51 @@ class Img(object):
     def invert(self):
         k210.image_invert()
 
+    def erode(self,*args, **kws):
+        k210.image_erode(*args, **kws)
+
+    def dilate(self,*args, **kws):
+        k210.image_dilate(*args, **kws)
+
+    def negate(self,*args, **kws):
+        k210.image_negate(*args, **kws)
+
+    def mean(self,*args, **kws):
+        k210.image_mean(*args, **kws)
+
+    def mode(self,*args, **kws):
+        k210.image_mode(*args, **kws)
+
+    def median(self,*args, **kws):
+        k210.image_median(*args, **kws)
+
+    def midpoint(self,*args, **kws):
+        k210.image_midpoint(*args, **kws)
+
+    def cartoon(self,*args, **kws):
+        k210.image_cartoon(*args, **kws)
+
+    def conv3(self,*args, **kws):
+        k210.image_conv3(*args, **kws)
+
+    def gaussian(self,*args, **kws):
+        k210.image_gaussian(*args, **kws)
+
+    def bilateral(self,*args, **kws):
+        k210.image_bilateral(*args, **kws)
+
+    def linpolar(self,*args, **kws):
+        k210.image_linpolar(*args, **kws)
+
+    def logpolar(self,*args, **kws):
+        k210.image_logpolar(*args, **kws)
+        
+    def rotation_corr(self,*args, **kws):
+        k210.image_rotation_corr(*args, **kws)
+
+    def find_blobs(self,*args, **kws):
+        return k210.image_find_blobs(*args, **kws)
+
 
 lcd = LCD()
 camera = Camera()
