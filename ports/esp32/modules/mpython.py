@@ -464,6 +464,7 @@ class Touthpad():
                 return 0
             else:
                 return 1023
+        return 1023
 
 touchPad_P = Touthpad(2)
 touchPad_Y = Touthpad(4)

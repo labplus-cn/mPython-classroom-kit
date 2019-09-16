@@ -278,6 +278,6 @@ typedef long mp_off_t;
 
 // board specifics
 
-#define MICROPY_HW_BOARD_NAME "mPython"
+#define MICROPY_HW_BOARD_NAME "mpython-classroom-kit"
 #define MICROPY_HW_MCU_NAME "ESP32"
 #define MICROPY_PY_SYS_PLATFORM "esp32"
