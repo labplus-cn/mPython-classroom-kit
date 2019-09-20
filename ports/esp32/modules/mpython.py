@@ -408,7 +408,7 @@ class wifi:
 # display
 if 60 in i2c.scan():
     oled = OLED()
-    display = oled
+    # display = oled
 
 # 3 axis accelerometer
 accelerometer = Accelerometer()
