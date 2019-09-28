@@ -412,7 +412,7 @@ class K210():
       self.send_cmd({'CAM_SET_VF': arg[0]},True, 10)
 
    def lcd_init(self, *args, **kws):
-      self.send_cmd({'LCD_INT': [args, kws]},True, 10)
+      self.send_cmd({'LCD_INT': [args, kws]},True, 1000)
 
    def lcd_display(self, **kws):
       self.send_cmd({'LCD_DISP': kws},True, 10)
