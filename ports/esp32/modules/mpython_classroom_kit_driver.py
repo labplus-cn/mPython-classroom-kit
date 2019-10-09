@@ -376,7 +376,7 @@ class K210():
       self.send_cmd({'DINT_NET': 0},True, 20)
 
    def camera_snapshot(self):
-      self.send_cmd({'SNAPSHOT': 0},True,20)
+      self.send_cmd({'SNAPSHOT': 0},True,50)
 
    def camera_reset(self):
       self.send_cmd({'CAM_RST': 0},True, 20)
