@@ -411,6 +411,9 @@ class K210():
    def camera_set_vflip(self, *arg):
       self.send_cmd({'CAM_SET_VF': arg[0]},True, 20)
 
+   def camera_skip_frames(self, *arg, **kw):
+      self.send_cmd({'CAM_SKIP_FRM': [arg, kw]},True, 20)
+
    def lcd_init(self, *args, **kws):
       self.send_cmd({'LCD_INT': [args, kws]},True,1000)
 
