@@ -293,7 +293,7 @@ class K210():
                         return
         raise K210Error("K210 init failed!")
 
-   def send_cmd(self, command, wait=True, timeout=100):
+   def send_cmd(self, command, wait=True, timeout=200):
       json_stream = ujson.dumps(command)
       uart2.write(json_stream + '\n')
       # print("UART_Send:%s" % (json_stream + '\n'))
@@ -328,20 +328,20 @@ class K210():
                return value
 
    def get_key(self):
-      rsp = self.send_cmd({'GET_KEYS': 0}, True, 50)
+      rsp = self.send_cmd({'GET_KEYS': 0})
 
       if rsp and isinstance(rsp, dict):
          return self.response_value(rsp, 'RET_KEYS')
       return None
 
    def get_distance(self):
-      rsp = self.send_cmd({'GET_DISTANCE': 0}, True, 50)
+      rsp = self.send_cmd({'GET_DISTANCE': 0})
       if rsp and isinstance(rsp, dict):
          return self.response_value(rsp, 'RET_DISTANCE')
       return None
 
    def set_motor(self, speed):
-      rsp = self.send_cmd({'SET_MOTOR': speed}, True, 50)
+      rsp = self.send_cmd({'SET_MOTOR': speed})
       if rsp and isinstance(rsp, dict):
          return self.response_value(rsp, 'RET_MOTOR')
       return None
@@ -427,7 +427,7 @@ class K210():
       self.send_cmd({'LCD_STR': args},True, 20)
 
    def image_load(self, *args, **kws):
-      self.send_cmd({'IMG_LOD': [args, kws]},True, 20)
+      self.send_cmd({'IMG_LOD': [args, kws]},True,1000)
 
    def image_width(self):
       rsp = self.send_cmd({'IMG_WID': 0})
@@ -472,10 +472,10 @@ class K210():
       self.send_cmd({'IMG_TO_RB': 0},True, 20)
 
    def image_copy(self, *args, **kws):
-      self.send_cmd({'IMG_CPY': [args, kws]},True, 20)
+      self.send_cmd({'IMG_CPY': [args, kws]},True, 50)
 
    def image_save(self, *args, **kws):
-      self.send_cmd({'IMG_SAVE': [args, kws]},True, 20)
+      self.send_cmd({'IMG_SAVE': [args, kws]})
 
    def image_clear(self):
       self.send_cmd({'IMG_CLR': 0},True, 20)
