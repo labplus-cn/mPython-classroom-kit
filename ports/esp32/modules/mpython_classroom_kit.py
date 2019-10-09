@@ -159,6 +159,9 @@ class Camera(object):
     def set_vflip(self,*arg):
         k210.camera_set_vflip(*arg)
 
+    def skip_frames(self,*arg,**kw):
+        k210.camera_skip_frames(*arg,**kw)
+
 
 class Img(object):
 
@@ -271,6 +274,9 @@ class Img(object):
 
     def find_blobs(self,*args, **kws):
         return k210.image_find_blobs(*args, **kws)
+
+    def skip_frames(self,*arg,**kw):
+        k210.camera_skip_frames(*arg,**kw)
 
 
 lcd = LCD()
