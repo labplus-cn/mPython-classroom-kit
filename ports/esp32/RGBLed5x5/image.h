@@ -59,7 +59,7 @@ machine_image_obj_t *imageInvert(machine_image_obj_t *image);
 
 
 /** Return a facade object that presents the string as a sequence of images */
-mp_obj_t mpython_string_facade(mp_obj_t string, mp_int_t bright, color_t color);
+mp_obj_t mpython_string_facade(mp_obj_t string, mp_int_t bright, color_t color, bool repeat);
 
 void mpython_image_set_from_char(machine_image_obj_t *img, char c, color_t color);
 machine_image_obj_t *mpython_image_for_char(char c, mp_int_t bright, color_t color);

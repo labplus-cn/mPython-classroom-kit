@@ -77,7 +77,7 @@ void imageFill(machine_image_obj_t *image, color_t val) {
         image->data[i].g = val.g;
         image->data[i].b = val.b;
     }
-    image->brightness = 3;
+    image->brightness = 1;
 }
 
 void imageClear(machine_image_obj_t *image) {
@@ -256,40 +256,46 @@ STATIC mp_obj_t mpython_image_make_new(const mp_obj_type_t *type_in, mp_uint_t n
                 // make image from string
                 if (len == 1) {
                     /* For a single charater, return the font glyph */
-                    return MP_OBJ_FROM_PTR(mpython_image_for_char(str[0], 5, col));
+                    return MP_OBJ_FROM_PTR(mpython_image_for_char(str[0], 1, col));
                 } else {
                     /* Otherwise parse the image description string */
-                    col.r = 5;
+                    col.r = 50;
                     col.g = 0;
                     col.b = 0;
-                    return MP_OBJ_FROM_PTR(image_from_parsed_str(str, len, 6, col));
+                    return MP_OBJ_FROM_PTR(image_from_parsed_str(str, len, 1, col));
                 }
             } else {
                 mp_raise_TypeError("Image(s) takes a string");
             } 
         }
 
-        case 2:
-        case 3: { //2－3个参数，创建指定大小图像。并初始化
+        case 2: //参数1：字符 参数2：亮度或颜色
+        { //2－3个参数，创建指定大小图像。并初始化
             if (MP_OBJ_IS_STR(args[0])) {
                 // arg is a string object
                 mp_uint_t len;
                 const char *str = mp_obj_str_get_data(args[0], &len);
-                bright = mp_obj_get_int(args[1]);
-                if(n_args == 3)
+                if(mp_obj_is_integer(args[1]))
                 {
-                    mp_buffer_info_t bufinfo;
-                    mp_get_buffer_raise(args[2], &bufinfo, MP_BUFFER_READ);
-                    col.r = ((uint8_t *)bufinfo.buf)[0];
-                    col.g = ((uint8_t *)bufinfo.buf)[1];
-                    col.b = ((uint8_t *)bufinfo.buf)[2];
-                }
-                else
-                {
-                    col.r = 5;
+                    bright = mp_obj_get_int(args[1]);
+                    if (bright < 0 || bright > MAX_BRIGHTNESS) {
+                        mp_raise_ValueError("brightness out of bounds");
+                    }
+                    bright = (bright > 1) ? 1 : bright;
+                    col.r = 50;
                     col.g = 0;
                     col.b = 0;
                 }
+                else
+                {
+                    bright = 1;
+                    mp_obj_t *elem;
+                    mp_obj_get_array_fixed_n(args[1], 3, &elem);
+                    col.r = mp_obj_get_int(elem[0]);
+                    col.g = mp_obj_get_int(elem[1]);
+                    col.b = mp_obj_get_int(elem[2]);
+                }
+                
                 // make image from string
                 if (len == 1) {
                     /* For a single charater, return the font glyph */
@@ -303,7 +309,7 @@ STATIC mp_obj_t mpython_image_make_new(const mp_obj_type_t *type_in, mp_uint_t n
             {
                 mp_int_t w = mp_obj_get_int(args[0]);
                 mp_int_t h = mp_obj_get_int(args[1]);
-                machine_image_obj_t *image = image_make_new(w, h, 9);
+                machine_image_obj_t *image = image_make_new(w, h, 1);
                 if (n_args == 2) {
                     imageClear(image);
                 } else {
@@ -320,7 +326,7 @@ STATIC mp_obj_t mpython_image_make_new(const mp_obj_type_t *type_in, mp_uint_t n
         }
 
         default: {
-            mp_raise_TypeError("Image() takes 0 to 3 arguments");
+            mp_raise_TypeError("Image() takes 0 to 2 arguments");
         }
     }
 }
@@ -448,29 +454,33 @@ mp_obj_t mpython_image_set_pixel(mp_uint_t n_args, const mp_obj_t *args) {
     mp_int_t x = mp_obj_get_int(args[1]);
     mp_int_t y = mp_obj_get_int(args[2]);
     color_t col;
-    if(n_args == 5)
+    mp_int_t bright;
+    if(mp_obj_is_integer(args[3]))
     {
-        mp_buffer_info_t bufinfo;
-        mp_get_buffer_raise(args[4], &bufinfo, MP_BUFFER_READ);
-        col.r = ((uint8_t *)bufinfo.buf)[0];
-        col.g = ((uint8_t *)bufinfo.buf)[1];
-        col.b = ((uint8_t *)bufinfo.buf)[2];
+        bright = mp_obj_get_int(args[3]);
+        if (bright < 0 || bright > MAX_BRIGHTNESS) {
+            mp_raise_ValueError("brightness out of bounds");
+        }
+        bright = (bright > 1) ? 1 : bright;
+        col.r = 50;
+        col.g = 0;
+        col.b = 0;
     }
     else
     {
-        col.r = 10;
-        col.g = 0;
-        col.b = 0;
+        bright = 1;
+        mp_obj_t *elem;
+        mp_obj_get_array_fixed_n(args[3], 3, &elem);
+        col.r = mp_obj_get_int(elem[0]);
+        col.g = mp_obj_get_int(elem[1]);
+        col.b = mp_obj_get_int(elem[2]);
     }
     
 
     if (x < 0 || y < 0) {
         mp_raise_ValueError("index cannot be negative");
     }
-    mp_int_t bright = mp_obj_get_int(args[3]);
-    if (bright < 0 || bright > MAX_BRIGHTNESS) {
-        mp_raise_ValueError("brightness out of bounds");
-    }
+
     self->brightness = bright;
     
     if (x < self->width && y < self->height) {
@@ -479,7 +489,7 @@ mp_obj_t mpython_image_set_pixel(mp_uint_t n_args, const mp_obj_t *args) {
     }
     mp_raise_ValueError("index too large");
 }
-MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mpython_image_set_pixel_obj, 4, 5, mpython_image_set_pixel);
+MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mpython_image_set_pixel_obj, 4, 4, mpython_image_set_pixel);
 
 mp_obj_t mpython_image_fill(mp_obj_t self_in, mp_obj_t n_in) {
     machine_image_obj_t *self = (machine_image_obj_t*)self_in;
@@ -491,18 +501,20 @@ mp_obj_t mpython_image_fill(mp_obj_t self_in, mp_obj_t n_in) {
         if (n < 0 || n > MAX_BRIGHTNESS) {
             mp_raise_ValueError("brightness out of bounds");
         }
+        n = (n > 1) ? 1 : n;
         self->brightness = n;
-        col.r = 10;
+        col.r = 50;
         col.g =  0;
         col.b = 0;
     }
     else
     {
-        mp_buffer_info_t bufinfo;
-        mp_get_buffer_raise(n_in, &bufinfo, MP_BUFFER_READ);
-        col.r = ((uint8_t *)bufinfo.buf)[0];
-        col.g = ((uint8_t *)bufinfo.buf)[1];
-        col.b = ((uint8_t *)bufinfo.buf)[2];
+        self->brightness = 1;
+        mp_obj_t *elem;
+        mp_obj_get_array_fixed_n(n_in, 3, &elem);
+        col.r = mp_obj_get_int(elem[0]);
+        col.g = mp_obj_get_int(elem[1]);
+        col.b = mp_obj_get_int(elem[2]);
     }
     imageFill(self, col);
     return mp_const_none;
@@ -1012,6 +1024,7 @@ typedef struct _string_image_facade_t {
     mp_obj_base_t base;
     mp_obj_t string;
     machine_image_obj_t *image;
+    bool repeat;
 } string_image_facade_t;
 
 /* 把string_image_facade_t 结构中字符指定索引字符转为image */
@@ -1065,15 +1078,17 @@ typedef struct _facade_iterator_t {
     mp_obj_t string;
     mp_uint_t index;
     machine_image_obj_t *image;
+    bool repeat;
 } facade_iterator_t;
 
 /* 新建一个string_image_facade_t对象*/
-mp_obj_t mpython_string_facade(mp_obj_t string, mp_int_t bright, color_t color) {
+mp_obj_t mpython_string_facade(mp_obj_t string, mp_int_t bright, color_t color, bool repeat) {
     string_image_facade_t *result = m_new_obj(string_image_facade_t);
     result->base.type = &string_image_facade_type;
     result->string = string;
     result->image = image_make_new(5, 5, bright);
     result->image->color = color;
+    result->repeat = repeat;
     return (mp_obj_t)result;
 }
 
@@ -1083,7 +1098,11 @@ static mp_obj_t mpython_facade_iter_next(mp_obj_t iter_in) {
     mp_uint_t len;
     const char *text = mp_obj_str_get_data(iter->string, &len);
     if (iter->index >= len) {
-        return MP_OBJ_STOP_ITERATION;
+        if (iter->repeat) {
+            iter->index = 0;
+        }
+        else  
+            return MP_OBJ_STOP_ITERATION;
     }
     mpython_image_set_from_char(iter->image, text[iter->index], iter->image->color);
     iter->index++;
@@ -1110,12 +1129,14 @@ const mp_obj_type_t mpython_facade_iterator_type = { //基类，实现记录和�
 
 /* 制作一个迭代器，实现按索引迭代转字符串中字符为image */
 static mp_obj_t mpython_facade_iterator(mp_obj_t iterable_in, mp_obj_iter_buf_t *iter_buf) {
-    assert(sizeof(facade_iterator_t) <= sizeof(mp_obj_iter_buf_t));
-    facade_iterator_t *result = (facade_iterator_t*)iter_buf;
+    // assert(sizeof(facade_iterator_t) <= sizeof(mp_obj_iter_buf_t));
+    (void)iter_buf;
+    facade_iterator_t *result = m_new_obj(facade_iterator_t);
     string_image_facade_t *iterable = (string_image_facade_t *)iterable_in;
     result->base.type = &mpython_facade_iterator_type;
     result->string = iterable->string;
     result->image = iterable->image;
+    result->repeat = iterable->repeat;
     result->index = 0;
     return result;
 }

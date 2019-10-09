@@ -56,13 +56,18 @@ void mpython_display_show(machine_display_obj_t *display, machine_image_obj_t *i
     mp_int_t h = min(image->height, 5);
     mp_int_t x = 0;
     color_t color;
+    mp_int_t bright = image->brightness;
+    if (bright < 0 || bright > MAX_BRIGHTNESS) {
+        mp_raise_ValueError("brightness out of bounds");
+    }
+    bright = (bright > 1) ? 1 : bright;
     for (; x < w; ++x) {
         mp_int_t y = 0;
         for (; y < h; ++y) {
             color = imageGetPixelValue(image, x, y);
-            display->image_buffer[y][x].r = color.r*image->brightness/10;
-            display->image_buffer[y][x].g = color.g*image->brightness/10;
-            display->image_buffer[y][x].b = color.b*image->brightness/10;            
+            display->image_buffer[y][x].r = color.r*bright;
+            display->image_buffer[y][x].g = color.g*bright;
+            display->image_buffer[y][x].b = color.b*bright;            
         }
         for (; y < 5; ++y) { //如果image小于5＊5,清除display大于image区域
             display->image_buffer[y][x].r = 0;
@@ -91,10 +96,10 @@ mp_obj_t mpython_display_show_func(mp_uint_t n_args, const mp_obj_t *pos_args, m
     static const mp_arg_t show_allowed_args[] = {
         { MP_QSTR_image,    MP_ARG_REQUIRED | MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
         { MP_QSTR_delay,    MP_ARG_INT, {.u_int = DEFAULT_PRINT_SPEED} },
-        { MP_QSTR_clear,     MP_ARG_KW_ONLY | MP_ARG_BOOL, {.u_bool = false} },
+        { MP_QSTR_clear,    MP_ARG_KW_ONLY | MP_ARG_BOOL, {.u_bool = false} },
         { MP_QSTR_wait,     MP_ARG_KW_ONLY | MP_ARG_BOOL, {.u_bool = true} },
         { MP_QSTR_loop,     MP_ARG_KW_ONLY | MP_ARG_BOOL, {.u_bool = false} },
-        { MP_QSTR_bright,   MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = 5} },
+        { MP_QSTR_bright,   MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = 1} },
         { MP_QSTR_color,    MP_ARG_KW_ONLY | MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
     };
 
@@ -109,30 +114,31 @@ mp_obj_t mpython_display_show_func(mp_uint_t n_args, const mp_obj_t *pos_args, m
     bool wait = args[3].u_bool;
     bool loop = args[4].u_bool;
     mp_int_t bright = args[5].u_int;
+    bright = (bright > 1) ? 1 : bright;
     mp_obj_t color = args[6].u_obj;
     color_t col;
     if(color != MP_OBJ_NULL)
     {
-        mp_buffer_info_t bufinfo;
-        mp_get_buffer_raise(color, &bufinfo, MP_BUFFER_READ);
-        col.r = ((uint8_t *)bufinfo.buf)[0];
-        col.g = ((uint8_t *)bufinfo.buf)[1];
-        col.b = ((uint8_t *)bufinfo.buf)[2];
+        mp_obj_t *elem;
+        mp_obj_get_array_fixed_n(color, 3, &elem);
+        col.r = mp_obj_get_int(elem[0]);
+        col.g = mp_obj_get_int(elem[1]);
+        col.b = mp_obj_get_int(elem[2]);
     }
     else
     {
-        col.r = 0x50;
+        col.r = 50;
         col.g = 0;
         col.b = 0;
     }
     
 
-    // Convert to string from an integer or float if applicable
+    // 1. int or float Convert to string from an integer or float if applicable
     if (mp_obj_is_integer(image) || mp_obj_is_float(image)) {
         image = mp_obj_str_make_new(&mp_type_str, 1, 0, &image);
     }
 
-    if (MP_OBJ_IS_STR(image)) {  //1. string
+    if (MP_OBJ_IS_STR(image)) {  //2. string
         // arg is a string object
         mp_uint_t len;
         const char *str = mp_obj_str_get_data(image, &len);
@@ -146,8 +152,8 @@ mp_obj_t mpython_display_show_func(mp_uint_t n_args, const mp_obj_t *pos_args, m
                 goto single_image_immediate;
             }
         }
-        image = mpython_string_facade(image, bright, col); //具有迭代特性
-    } else if (mp_obj_get_type(image) == &machine_image_type) { // 2. image
+        image = mpython_string_facade(image, bright, col, loop); //具有迭代特性
+    } else if (mp_obj_get_type(image) == &machine_image_type) { // 3. image
         if (!clear && !loop) {
             goto single_image_immediate;
         }
@@ -316,7 +322,7 @@ mp_obj_t mpython_display_scroll_func(mp_uint_t n_args, const mp_obj_t *pos_args,
         { MP_QSTR_wait, MP_ARG_KW_ONLY | MP_ARG_BOOL, {.u_bool = true} },
         { MP_QSTR_monospace, MP_ARG_KW_ONLY | MP_ARG_BOOL, {.u_bool = false} },
         { MP_QSTR_loop, MP_ARG_KW_ONLY | MP_ARG_BOOL, {.u_bool = false} },
-        { MP_QSTR_bright,   MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = 5} },
+        { MP_QSTR_bright,   MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = 1} },
         { MP_QSTR_color,    MP_ARG_KW_ONLY | MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
     };
     // Parse the args.
@@ -324,19 +330,20 @@ mp_obj_t mpython_display_scroll_func(mp_uint_t n_args, const mp_obj_t *pos_args,
     mp_arg_val_t args[MP_ARRAY_SIZE(scroll_allowed_args)];
     mp_arg_parse_all(n_args - 1, pos_args + 1, kw_args, MP_ARRAY_SIZE(scroll_allowed_args), scroll_allowed_args, args);
     mp_int_t bright = args[5].u_int;
+    bright = (bright > 1) ? 1 : bright;
     mp_obj_t color = args[6].u_obj;
     color_t col;
     if(color != MP_OBJ_NULL)
     {
-        mp_buffer_info_t bufinfo;
-        mp_get_buffer_raise(color, &bufinfo, MP_BUFFER_READ);
-        col.r = ((uint8_t *)bufinfo.buf)[0];
-        col.g = ((uint8_t *)bufinfo.buf)[1];
-        col.b = ((uint8_t *)bufinfo.buf)[2];
+        mp_obj_t *elem;
+        mp_obj_get_array_fixed_n(color, 3, &elem);
+        col.r = mp_obj_get_int(elem[0]);
+        col.g = mp_obj_get_int(elem[1]);
+        col.b = mp_obj_get_int(elem[2]);
     }
     else
     {
-        col.r = 15;
+        col.r = 50;
         col.g = 0;
         col.b = 0;
     }
@@ -399,9 +406,10 @@ void mpython_display_set_pixel(machine_display_obj_t *display, mp_int_t x, mp_in
     if (bright < 0 || bright > MAX_BRIGHTNESS) {
         mp_raise_ValueError("brightness out of bounds");
     }
-    display->image_buffer[y][x].r = color.r;
-    display->image_buffer[y][x].g = color.g;
-    display->image_buffer[y][x].b = color.b;
+    mp_int_t _bright = (bright > 1) ? 1 : bright;
+    display->image_buffer[y][x].r = _bright*color.r;
+    display->image_buffer[y][x].g = _bright*color.g;
+    display->image_buffer[y][x].b = _bright*color.b;
     gpio_set_direction(display->pin, GPIO_MODE_INPUT_OUTPUT);
     mp_hal_delay_us(50);
     esp_neopixel_write(display->pin, (uint8_t *)(display->image_buffer), 75, 1);
@@ -411,26 +419,32 @@ STATIC mp_obj_t mpython_display_set_pixel_func(mp_uint_t n_args, const mp_obj_t 
     (void)n_args;
     machine_display_obj_t *self = (machine_display_obj_t*)args[0];
     color_t col;
-    mp_buffer_info_t bufinfo;
-    mp_int_t bright = mp_obj_get_int(args[3]);
-    if(n_args == 5)
+    mp_int_t bright;
+    if(mp_obj_is_integer(args[3]))
     {
-        mp_get_buffer_raise(args[4], &bufinfo, MP_BUFFER_READ);
-        col.r = ((uint8_t *)bufinfo.buf)[0];
-        col.g = ((uint8_t *)bufinfo.buf)[1];
-        col.b = ((uint8_t *)bufinfo.buf)[2];
-    }
-    else
-    {
-        col.r =  10;
+        bright = mp_obj_get_int(args[3]);
+        if (bright < 0 || bright > MAX_BRIGHTNESS) {
+            mp_raise_ValueError("brightness out of bounds");
+        }
+        bright = (bright > 1) ? 1 : bright;
+        col.r =  50;
         col.g = 0;
         col.b = 0;
     }
+    else
+    {
+        bright = 1;
+        mp_obj_t *elem;
+        mp_obj_get_array_fixed_n(args[3], 3, &elem);
+        col.r = mp_obj_get_int(elem[0]);
+        col.g = mp_obj_get_int(elem[1]);
+        col.b = mp_obj_get_int(elem[2]);
+    }
     
-    mpython_display_set_pixel(self, mp_obj_get_int(args[1]), mp_obj_get_int(args[2]), mp_obj_get_int(args[3]), col);
+    mpython_display_set_pixel(self, mp_obj_get_int(args[1]), mp_obj_get_int(args[2]), bright, col);
     return mp_const_none;
 }
-MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mpython_display_set_pixel_obj, 4, 5, mpython_display_set_pixel_func);
+MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mpython_display_set_pixel_obj, 4, 4, mpython_display_set_pixel_func);
 
 color_t mpython_display_get_pixel(machine_display_obj_t *display, mp_int_t x, mp_int_t y) {
     if (x < 0 || y < 0 || x > 4 || y > 4) {
@@ -499,6 +513,7 @@ machine_display_obj_t mpython_display_obj = {
     {&mpython_display_type},
     {{{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0}}, {{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0}}, {{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0}}, 
      {{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0}}, {{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0}}},
+    .bright = 0,
     .pin = GPIO_NUM_25,
     .nums = 25,
     .timing = 1,

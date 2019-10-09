@@ -32,7 +32,7 @@
     {&machine_image_type}, \
     .height = 5, \
     .width = 5, \
-    .brightness = 5, \
+    .brightness = 1, \
     .color = {0,0,0}, \
     .data = (color_t *)dat, \
 }

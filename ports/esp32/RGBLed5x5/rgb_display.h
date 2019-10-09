@@ -33,6 +33,7 @@
 typedef struct _machine_display_obj_t {
     mp_obj_base_t base;
     color_t image_buffer[5][5];
+    uint8_t bright;
     uint8_t pin;
     uint8_t nums;
     uint8_t timing;
