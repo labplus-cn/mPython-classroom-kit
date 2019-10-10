@@ -127,7 +127,7 @@ mp_obj_t mpython_display_show_func(mp_uint_t n_args, const mp_obj_t *pos_args, m
     }
     else
     {
-        col.r = 50;
+        col.r = 20;
         col.g = 0;
         col.b = 0;
     }
@@ -233,7 +233,7 @@ static void draw_object(mp_obj_t obj) {
 
 static void mpython_display_update(void) {
     async_tick += MILLISECONDS_PER_MACRO_TICK; //更新间隔
-    if (async_tick < 1500) { //async_delay
+    if (async_tick < async_delay*10) { //async_delay
         return;
     }
     async_tick = 0;
@@ -343,7 +343,7 @@ mp_obj_t mpython_display_scroll_func(mp_uint_t n_args, const mp_obj_t *pos_args,
     }
     else
     {
-        col.r = 50;
+        col.r = 20;
         col.g = 0;
         col.b = 0;
     }
@@ -427,7 +427,7 @@ STATIC mp_obj_t mpython_display_set_pixel_func(mp_uint_t n_args, const mp_obj_t 
             mp_raise_ValueError("brightness out of bounds");
         }
         bright = (bright > 1) ? 1 : bright;
-        col.r =  50;
+        col.r =  20;
         col.g = 0;
         col.b = 0;
     }
