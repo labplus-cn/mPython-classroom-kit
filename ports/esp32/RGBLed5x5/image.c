@@ -250,7 +250,7 @@ STATIC mp_obj_t mpython_image_make_new(const mp_obj_type_t *type_in, mp_uint_t n
                 // arg is a string object
                 mp_uint_t len;
                 const char *str = mp_obj_str_get_data(args[0], &len);
-                col.r = 50;
+                col.r = 20;
                 col.g = 0;
                 col.b = 0;
                 // make image from string
@@ -259,7 +259,7 @@ STATIC mp_obj_t mpython_image_make_new(const mp_obj_type_t *type_in, mp_uint_t n
                     return MP_OBJ_FROM_PTR(mpython_image_for_char(str[0], 1, col));
                 } else {
                     /* Otherwise parse the image description string */
-                    col.r = 50;
+                    col.r = 20;
                     col.g = 0;
                     col.b = 0;
                     return MP_OBJ_FROM_PTR(image_from_parsed_str(str, len, 1, col));
@@ -282,7 +282,7 @@ STATIC mp_obj_t mpython_image_make_new(const mp_obj_type_t *type_in, mp_uint_t n
                         mp_raise_ValueError("brightness out of bounds");
                     }
                     bright = (bright > 1) ? 1 : bright;
-                    col.r = 50;
+                    col.r = 20;
                     col.g = 0;
                     col.b = 0;
                 }
@@ -305,28 +305,32 @@ STATIC mp_obj_t mpython_image_make_new(const mp_obj_type_t *type_in, mp_uint_t n
                     return MP_OBJ_FROM_PTR(image_from_parsed_str(str, len, bright, col));
                 }
             }
-            else
-            {
-                mp_int_t w = mp_obj_get_int(args[0]);
-                mp_int_t h = mp_obj_get_int(args[1]);
-                machine_image_obj_t *image = image_make_new(w, h, 1);
-                if (n_args == 2) {
-                    imageClear(image);
-                } else {
-                    mp_buffer_info_t bufinfo;
-                    mp_get_buffer_raise(args[2], &bufinfo, MP_BUFFER_READ);
+        }
+        case 3:
+        {
+            mp_int_t w = mp_obj_get_int(args[0]);
+            mp_int_t h = mp_obj_get_int(args[1]);
+            machine_image_obj_t *image = image_make_new(w, h, 1);
+            if (n_args == 2) {
+                imageClear(image);
+            } else {
+                mp_buffer_info_t bufinfo;
+                mp_get_buffer_raise(args[2], &bufinfo, MP_BUFFER_READ);
 
-                    if (w < 0 || h < 0 || (size_t)(w * h) != bufinfo.len) {
-                        mp_raise_ValueError("image data is incorrect size");
-                    }
-                    memcpy((uint8_t *)image->data, bufinfo.buf, bufinfo.len);
+                if (w < 0 || h < 0 || (size_t)(w * h) != bufinfo.len) {
+                    mp_raise_ValueError("image data is incorrect size");
                 }
-                return MP_OBJ_FROM_PTR(image);
+                for(mp_int_t i = 0; i < w*h; i++)
+                {
+                    image->data[i].r = ((uint8_t *)bufinfo.buf)[i];
+                }
+                // memcpy((uint8_t *)image->data, bufinfo.buf, bufinfo.len);
             }
+            return MP_OBJ_FROM_PTR(image);
         }
 
         default: {
-            mp_raise_TypeError("Image() takes 0 to 2 arguments");
+            mp_raise_TypeError("Image() takes 0 to 3 arguments");
         }
     }
 }
@@ -462,7 +466,7 @@ mp_obj_t mpython_image_set_pixel(mp_uint_t n_args, const mp_obj_t *args) {
             mp_raise_ValueError("brightness out of bounds");
         }
         bright = (bright > 1) ? 1 : bright;
-        col.r = 50;
+        col.r = 20;
         col.g = 0;
         col.b = 0;
     }
@@ -503,7 +507,7 @@ mp_obj_t mpython_image_fill(mp_obj_t self_in, mp_obj_t n_in) {
         }
         n = (n > 1) ? 1 : n;
         self->brightness = n;
-        col.r = 50;
+        col.r = 20;
         col.g =  0;
         col.b = 0;
     }
