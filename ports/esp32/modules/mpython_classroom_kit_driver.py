@@ -230,7 +230,7 @@ class Es8388():
          raise Exception("bs8112a i2c read/write error!")
 
 
-uart2 = UART(2, baudrate=115200, rx=Pin.P8, tx=Pin.P23,
+uart2 = UART(2, baudrate=1152000, rx=Pin.P8, tx=Pin.P23,
              timeout=50, timeout_char=1024, rxbuf=512, txbuf=512)
 
 
@@ -328,6 +328,18 @@ class K210():
 
    def set_motor(self, speed):
       return self.send_cmd({'SET_MOTOR': speed})
+
+   def file_open(self, *args):
+      return self.send_cmd({'FILE_OPEN': args})
+
+   def file_read(self, len):
+      return self.send_cmd({'FILE_READ': len})
+
+   def file_write(self, content):
+      return self.send_cmd({'FILE_WRITE': content})
+
+   def file_close(self):
+      return self.send_cmd({'FILE_CLOSE': 0})
 
    def reset(self):
       self.send_cmd({'RESET': 0},False)
