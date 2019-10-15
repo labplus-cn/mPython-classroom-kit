@@ -288,8 +288,6 @@ class MPythonPin():
             raise TypeError("mode must be 'IN, OUT, PWM, ANALOG,OUT_DRAIN'")
         if pin == 4:
             raise TypeError("P4 is used for light sensor")
-        if pin == 10:
-            raise TypeError("P10 is used for sound sensor")
         try:
             self.id = pins_remap_esp32[pin]
         except IndexError:
