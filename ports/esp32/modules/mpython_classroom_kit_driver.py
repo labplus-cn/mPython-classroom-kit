@@ -402,7 +402,7 @@ class K210():
       return self.send_cmd({'CAM_SKIP_FRM': [arg, kw]})
 
    def lcd_init(self, *args, **kws):
-      return self.send_cmd({'LCD_INT': [args, kws]},timeout=2000)
+      return self.send_cmd({'LCD_INT': [args, kws]},timeout=5000)
 
    def lcd_display(self, **kws):
       return self.send_cmd({'LCD_DISP': kws})
