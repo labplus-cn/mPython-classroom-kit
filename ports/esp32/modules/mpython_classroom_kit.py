@@ -10,6 +10,7 @@ from machine import Pin, ADC
 import time, ujson
 from mpython_classroom_kit_driver import K210,K210Error
 from mpython import i2c
+import ubinascii
 # human infrared
 pir = Pin(21, mode=Pin.IN, pull=None)
 
@@ -45,6 +46,36 @@ def set_motor(speed):
 def k210_reset():
     k210.reset()
 
+"""k210文件传送"""
+def filefrom_k210(source,target=None):
+    k210.file_open(source,'rb')
+    if target ==None:
+        target = source
+    with open(target,'wb') as temp:
+        while True:
+            base_64_data= k210.file_read(512*3)
+            churk=ubinascii.a2b_base64(base_64_data)
+            if churk != b'':
+                temp.write(churk)
+            else:
+                break
+    k210.file_close()
+
+def fileto_k210(source,target=None):
+    if target ==None:
+        target = source
+    k210.file_open(target,'wb')
+    with open(source,'rb') as temp:
+        while True:
+            buf = temp.read(512*3)
+            base64_data = ubinascii.b2a_base64(buf).strip()
+            if  base64_data != b'':
+                k210.file_write(base64_data)
+            else:
+                break
+    k210.file_close()
+
+
 class Model(object):
 
     def __init__(self):
@@ -79,7 +110,8 @@ class Model(object):
     def deinit_net(self):
         """net释放"""
         k210.deinit_net()
- 
+    
+
 
 class LCD(object):
     BLACK = 0

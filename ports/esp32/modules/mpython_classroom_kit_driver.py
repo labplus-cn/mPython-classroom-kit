@@ -231,7 +231,7 @@ class Es8388():
 
 
 uart2 = UART(2, baudrate=1152000, rx=Pin.P8, tx=Pin.P23,
-             timeout=50, timeout_char=1024, rxbuf=512, txbuf=512)
+             timeout=50, timeout_char=1024, rxbuf=2048, txbuf=2048)
 
 
 class K210Error(Exception):
@@ -288,7 +288,7 @@ class K210():
                return
         raise K210Error("K210 init failed!")
 
-   def send_cmd(self, command, wait=True, timeout=100):
+   def send_cmd(self, command, wait=True, timeout=200):
       json_stream = ujson.dumps(command)
       uart2.write(json_stream + '\n')
       # print("UART_Send:%s" % (json_stream + '\n'))
@@ -332,11 +332,11 @@ class K210():
    def file_open(self, *args):
       return self.send_cmd({'FILE_OPEN': args})
 
-   def file_read(self, len):
-      return self.send_cmd({'FILE_READ': len})
+   def file_read(self, *args):
+      return self.send_cmd({'FILE_READ': args[0]},timeout=300)
 
-   def file_write(self, content):
-      return self.send_cmd({'FILE_WRITE': content})
+   def file_write(self, *args):
+      return self.send_cmd({'FILE_WRITE': args[0]},timeout=300)
 
    def file_close(self):
       return self.send_cmd({'FILE_CLOSE': 0})
