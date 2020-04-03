@@ -467,7 +467,7 @@ STATIC mp_obj_t audio_recorder_init(void)
         renderer_config->i2s_num = I2S_NUM_0;
         renderer_config->adc_num = ADC_UNIT_1;
         renderer_config->adc_channel_num = ADC1_CHANNEL_2;
-        renderer_config->sample_rate = 16000;
+        renderer_config->sample_rate = 8000; //16000;
         renderer_config->sample_rate_modifier = 1.0;
         renderer_config->mode = ADC; 
         renderer_config->i2s_channal_nums = 1;    
