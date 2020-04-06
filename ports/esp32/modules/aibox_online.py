@@ -36,8 +36,13 @@ def get_pbm_data(_path):
     return (width, height, bytearray(f.read()))
     
 oled.fill(0)
-oled.DispChar("Online Mode", 30, 16)
+oled.DispChar("           FIRMWARE", 0, 16, 1)
+oled.DispChar("          Online Mode", 0, 32, 1)
 oled.show()
+image.clear()
+image.draw_string(90, 80,"FIRMWARE", color=(255, 255, 0), scale=3, x_spacing=0, y_spacing=0, mono_space=False)
+image.draw_string(85, 110,"Online Mode", color=(0, 255, 0), scale=3, x_spacing=0, y_spacing=0, mono_space=False)
+lcd.display()
 
 def getTouchpad():
     val=0x00
